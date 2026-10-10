@@ -1,0 +1,224 @@
+\section{Methodology}
+\label{sec:method}
+
+In this section, we present the proposed framework in detail. Unlike existing agent-safety methods that judge text segments or score entire executions, the proposed framework grounds every risk decision in complete tool operations: it extracts \aeu{}s from the \stg{}, grows \csg{}s along real execution dependencies, and scores each candidate against its full trajectory through one shared encoder. Moreover, instead of requiring action-level annotations, the framework learns from graph-level labels and paired normal/anomalous executions of the same task, and converts the top-ranked subgraph into a structured \sexp{} that changes agent behavior on future, similar situations. The framework is composed of three key components: \emph{Semantic Trajectory Graph Representation and Action Execution Unit Construction}, \emph{Contextual Semantic-Subgraph Encoding and Scoring}, and \emph{Weakly Supervised Optimization with Safety Experience Generation}. The overall architecture is shown in Fig.~\ref{fig:overview}.
+
+\begin{figure}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  node distance=4mm and 5mm,
+  box/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, inner sep=3pt, minimum height=8mm},
+  outbox/.style={box, fill=orange!12},
+  arr/.style={-{Latex[length=2mm]}, thick},
+  lab/.style={font=\tiny, align=center}
+]
+\node[box] (traj) {Execution\\trajectory};
+\node[box, right=of traj] (graph) {\stg{}\\(typed, directed,\\justified edges)};
+\node[box, right=of graph] (unit) {\aeu{}s\\(anchor: Action)};
+\node[box, right=of unit] (cand) {\csg{}s\\(unit-wise\\expansion)};
+\node[box, below=8mm of graph, xshift=13mm] (enc) {Shared\\Edge-GAT\\encoder};
+\node[box, right=of enc] (fuse) {Global--local\\fusion};
+\node[outbox, below=4mm of fuse, xshift=-2mm] (detect) {Graph-level\\detection};
+\node[outbox, above=4mm of fuse, xshift=-2mm] (loc) {Candidate\\ranking};
+\node[box, right=of fuse] (exp) {\sexp{}\\generation};
+\node[box, right=of exp] (agent) {Agent\\policy};
+\draw[arr] (traj) -- (graph);
+\draw[arr] (graph) -- (unit);
+\draw[arr] (unit) -- (cand);
+\draw[arr] (cand) |- (enc);
+\draw[arr] (graph) |- (enc);
+\draw[arr] (enc) -- (fuse);
+\draw[arr] (fuse) -- (detect);
+\draw[arr] (fuse) -- (loc);
+\draw[arr] (loc) -| (exp);
+\draw[arr] (exp) -- (agent);
+\end{tikzpicture}}
+\caption{The overall architecture of the proposed framework. The upper part represents \stg{} construction and \aeu{}-anchored \csg{} extraction; the lower left part corresponds to shared edge-attention encoding and global--local fusion; and the right part illustrates graph-level detection, candidate ranking, and \sexp{} generation that conditions the agent policy.}
+\label{fig:overview}
+\end{figure}
+
+\subsection{Notations}
+
+We summarize the notation used throughout this section. Each execution trajectory $\mathcal{T}$ is represented as a directed attributed graph $G=(V,E,X_V,X_E)$ following Eq.~\eqref{eq:graph} in \S\ref{sec:problem}, where $V$ is the node set, $E\subseteq V\times V$ is the directed edge set following execution flow, $X_V$ collects node features, and $X_E$ collects edge features. Each node carries one of the four execution roles in Table~\ref{tab:nodetypes}, and each edge carries one of the five relation types in Table~\ref{tab:edgetypes} together with a direction and a justification text $t_{ij}$. For an action $a\in V$, its \aeu{} is denoted $U_a$ following Eq.~\eqref{eq:unit}, and the \csg{} set of the trajectory is $\mathcal{C}=\{C_1,\dots,C_K\}$ with $K$ candidates grown by Eqs.~\eqref{eq:cand0}--\eqref{eq:cand}. A detection model is represented as $f_\theta$, parameterized by $\theta$; given $G$ and $\mathcal{C}$, it outputs a graph-level score $p_G\in[0,1]$ and candidate scores $\{p_k\}$ with margins $\{m_k\}$. Training minimizes a composite objective $\mathcal{L}_{\mathrm{total}}(\theta)$ defined over graph labels $y_G$, paired normal/anomalous trajectories, and pseudo-labeled candidates. Unless otherwise specified, $d$ denotes the hidden dimension, $L$ the number of encoder layers, and $B$ the maximum candidate size measured in nodes.
+
+\subsection{Chunk-Aware Node and Edge Representation}
+
+In this subsection, we construct the node and edge features that feed the shared encoder. Node texts in trajectories range from a tool parameter to a multi-paragraph reflection, and a single pooled vector would blur exactly the spans that carry risk signals. Specifically, each node text is split into overlapping token chunks $\{c_{ij}\}$, encoded independently by a sentence encoder~\cite{reimers2019sentencebert,gao2021simcse}, and each chunk receives a risk gate:
+\begin{equation}
+z_{ij}=\operatorname{TextEncoder}(c_{ij}),\qquad
+r_{ij}=\sigma(\operatorname{MLP}(z_{ij})),
+\label{eq:riskgate}
+\end{equation}
+where $z_{ij}\in\mathbb{R}^{d}$ is the embedding of chunk $j$ of node $i$, and $r_{ij}\in(0,1)$ is the gate value that amplifies chunks whose content resembles risk-bearing language. The gated chunks are aggregated by max pooling into the node text representation:
+\begin{equation}
+h_i^{\mathrm{text}}=\max_j\!\left(\phi(z_{ij})\odot(1+r_{ij})\right),
+\label{eq:chunkpool}
+\end{equation}
+where $\phi(\cdot)$ is a linear projection that aligns chunk embeddings with the node feature space and $\odot$ denotes element-wise multiplication; taking the maximum over gates keeps the most risk-salient chunk of each node. The final node feature concatenates $h_i^{\mathrm{text}}$ with a node-type embedding, a relative position encoding, and the text length. Every directed edge $(i,j)$ encodes its justification text, relation type, and direction:
+\begin{equation}
+g_{ij}=\operatorname{MLP}_E\!\big(\big[\operatorname{TextEncoder}(t_{ij});\,e_{\mathrm{rel}(i,j)};\,e_{\mathrm{dir}(i,j)}\big]\big),
+\label{eq:edgefeat}
+\end{equation}
+where $t_{ij}$ is the justification text of \S\ref{sec:data}, $e_{\mathrm{rel}}$ and $e_{\mathrm{dir}}$ are learnable embeddings of the relation type in Table~\ref{tab:edgetypes} and the execution direction, and $[\cdot\,;\cdot]$ denotes concatenation. This design allows every inferred dependency to remain auditable, since its feature is grounded in the quotation that supports it. Encoder identity, chunk length, overlap, and dimensions are reported in \tbd{TBD-ENCODER-CONFIGURATION}.
+
+\subsection{Action Execution Units and Candidate Subgraphs}
+
+In this subsection, we construct the \aeu{}s and the \csg{}s from the graph built in \S\ref{sec:data}. For each action $a$, the unit $U_a$ in Eq.~\eqref{eq:unit} is recovered directly from the graph structure: the reasoning chain $R_a$ follows semantic in-edges backward from $a$; the inputs $I_a$ follow the same edges one step further or terminate at the triggering state; the output $O_a$ follows the \texttt{computes\_from} edge; and the reflections $F_a$ attach through \texttt{reflects} edges. Figure~\ref{fig:unit} illustrates a unit inside a running example with branches and a convergence. Unit dependencies are then built from state reuse: if the output state of $U_{a_i}$ is consumed by $U_{a_j}$, we add a unit dependency $U_{a_i}\rightarrow U_{a_j}$, and candidates grow from an anchor unit by adding complete predecessor units layer by layer, following Eqs.~\eqref{eq:cand0}--\eqref{eq:cand} under the six constraints of \S\ref{sec:problem}. Independent branches form separate candidates, so evidence from one branch is not diluted by another; converging actions may additionally form a joint-context candidate, so composition risks---where two individually innocuous operations jointly produce harm---are represented. The budget constraint guarantees that every action keeps at least one anchored candidate, so localization can never silently drop an operation. This construction ensures that every candidate is a complete, connected slice of an actual execution, which is the property that fixed-hop neighborhoods lack. Candidate coverage and size statistics are reported in \tbd{TBD-CANDIDATE-COVERAGE}.
+
+\begin{figure}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  node distance=6mm and 9mm,
+  pnode/.style={draw, rounded corners=1pt, fill=violet!12, font=\scriptsize, inner sep=2.5pt, minimum width=9mm},
+  tnode/.style={draw, rounded corners=1pt, fill=teal!12, font=\scriptsize, inner sep=2.5pt, minimum width=9mm},
+  anode/.style={draw, rounded corners=1pt, fill=orange!22, font=\scriptsize, inner sep=2.5pt, minimum width=9mm},
+  snode/.style={draw, rounded corners=1pt, fill=cyan!12, font=\scriptsize, inner sep=2.5pt, minimum width=9mm},
+  arr/.style={-{Latex[length=1.6mm]}, font=\tiny},
+  el/.style={font=\tiny, fill=white, inner sep=0.5pt}
+]
+\node[pnode] (p) {Problem};
+\node[tnode, right=of p] (t1) {Thinking$_1$};
+\node[anode, right=of t1] (a1) {Action$_1$};
+\node[snode, below=of a1] (s1) {State$_1$};
+\node[tnode, right=of a1] (t2) {Thinking$_2$};
+\node[anode, right=of t2] (a2) {Action$_2$};
+\node[snode, below=of a2] (s2) {State$_2$};
+\node[tnode, below=of s2, xshift=-9mm] (f2) {Reflect$_2$};
+\node[snode, below=of s1] (s1b) {State$_{1b}$};
+\draw[arr] (p) -- node[el, above] {dep} (t1);
+\draw[arr] (t1) -- node[el, above] {dep} (a1);
+\draw[arr] (a1) -- node[el, right] {comp} (s1);
+\draw[arr] (a1) -- node[el, right] {comp} (s1b);
+\draw[arr] (s1) -- node[el, above] {dep} (t2);
+\draw[arr] (t2) -- node[el, above] {dep} (a2);
+\draw[arr] (a2) -- node[el, right] {comp} (s2);
+\draw[arr] (s2) -- node[el, right] {refl} (f2);
+\begin{scope}[on background layer]
+\node[draw=blue!60, thick, dashed, rounded corners=3pt, fit=(s1)(t2)(a2)(s2)(f2), inner sep=2.5pt] (u2) {};
+\node[draw=orange!80!black, thick, dotted, rounded corners=3pt, fit=(p)(t1)(a1)(s1)(s1b), inner sep=2.5pt] (u1) {};
+\end{scope}
+\node[font=\tiny, blue!60!black, above=0.5mm of a2] {$U_{a_2}$ ($C^{(1)}$)};
+\node[font=\tiny, orange!80!black, above=0.5mm of a1, xshift=-6mm] {$U_{a_1}$};
+\draw[arr, orange!80!black, densely dashed] (u1.north east) to[bend left=18] node[el, above right=0mm and -2mm] {add full unit} (u2.north west);
+\end{tikzpicture}}
+\caption{The construction of \aeu{}s and unit-wise \csg{}s. The boxed regions mark complete units: the anchored unit $U_{a_2}$ contains the full input state, reasoning chain, action, output state, and reflection, and candidate growth adds complete predecessor units ($U_{a_1}$), never partial hops. Branch outputs of $a_1$ stay inside their own units and feed separate candidates.}
+\label{fig:unit}
+\end{figure}
+
+\subsection{Shared Edge-Attention Encoding and Contextual Scoring}
+
+In this subsection, we encode the full trajectory and all candidates with one shared encoder and score candidates in context. Full trajectories and \csg{}s must be comparable in a single representation space; otherwise the contextual comparison below degenerates. Specifically, a directed edge-attention layer aggregates from true in-edge neighbors only, with attention determined jointly by source, target, and edge representations:
+\begin{equation}
+h_i^{(l+1)}=\operatorname{ResNorm}\!\left(
+h_i^{(l)}+
+\sum_{j:(j,i)\in E}
+\alpha_{ji}^{(l)}\operatorname{Msg}(h_j^{(l)},g_{ji})
+\right),
+\label{eq:edgegat}
+\end{equation}
+where $h_i^{(l)}$ is the state of node $i$ at layer $l$, $g_{ji}$ is the edge feature of Eq.~\eqref{eq:edgefeat}, $\alpha_{ji}^{(l)}$ is the attention coefficient computed from the pair of node states and the edge representation, $\operatorname{Msg}(\cdot)$ is the message function, and $\operatorname{ResNorm}(\cdot)$ is a residual-and-normalization block that stabilizes depth. Because edge features enter both the attention logits and the message, justification text and relation type directly modulate information flow, the property that relational and heterogeneous encoders establish as necessary for typed graphs~\cite{schlichtkrull2017modeling,hu2020heterogeneous}. Graph-level representations pool node states:
+\begin{equation}
+h_G=\operatorname{MeanPool}(\{h_i\})\,\Vert\,\operatorname{MaxPool}(\{h_i\}),
+\label{eq:pool}
+\end{equation}
+where $\Vert$ denotes concatenation; Eq.~\eqref{eq:pool} is computed identically for the full graph $G$ and each \csg{} $C_k$, and both pass through a shared LayerNorm so that their scales are aligned.
+
+For finer granularity, each candidate is scored \emph{in context}: the same operation can be legitimate in one trajectory and fatal in another, so the candidate representation is compared against the full-graph representation through similarity, difference, and product terms:
+\begin{equation}
+q_k=\big[h_{C_k};\,h_G;\,|h_{C_k}-h_G|;\,h_{C_k}\odot h_G\big],
+\label{eq:qk}
+\end{equation}
+from which a candidate margin and probability are read:
+\begin{equation}
+m_k=f_\theta(q_k),\qquad p_k=\sigma(m_k),
+\label{eq:mk}
+\end{equation}
+where $f_\theta$ is a scoring head parameterized by $\theta$, $m_k$ is the candidate margin, and $p_k$ is the probability that candidate $C_k$ is a risk locus. The local branch fuses the strongest candidate with the average of the top-ranked candidates, so evidence scattered over several operations is not lost:
+\begin{equation}
+S_{\mathrm{local}}=\alpha\max_k m_k+(1-\alpha)\operatorname{Mean}(\operatorname{TopK}(\{m_k\})),
+\label{eq:slocal}
+\end{equation}
+and the final graph-level score blends the full-graph and local branches:
+\begin{equation}
+S_G=\beta S_{\mathrm{full}}+(1-\beta)S_{\mathrm{local}},\qquad p_G=\sigma(S_G),
+\label{eq:sg}
+\end{equation}
+where $S_{\mathrm{full}}$ is the score read from $h_G$ by the same head, and $\alpha,\beta\in(0,1)$ are sigmoid-parameterized and learned from data rather than fixed, letting the training distribution decide how much localization contributes to detection. This design allows the local branch to contribute operation-level evidence that a whole-graph score cannot express, while the global branch supplies behavioral context that a subgraph alone lacks.
+
+\subsection{Weakly Supervised Optimization}
+
+In this subsection, we train the detector and the ranker jointly without action-level annotations. Complete action-level labels are scarce, while graph labels are abundant and paired normal/anomalous runs of the same task exist by construction of the corpora. Specifically, the total loss combines four terms:
+\begin{equation}
+\mathcal{L}_{\mathrm{total}}
+=\mathcal{L}_{\mathrm{graph}}
++\lambda_p\mathcal{L}_{\mathrm{pseudo}}
++\mathcal{U}(\mathcal{L}_{\mathrm{normal}};s_n)
++\mathcal{U}(\mathcal{L}_{\mathrm{rank}};s_r),
+\label{eq:ltotal}
+\end{equation}
+where $\mathcal{L}_{\mathrm{graph}}$ is the graph-level cross-entropy on $y_G$; $\mathcal{L}_{\mathrm{pseudo}}$ builds candidate pseudo-labels from paired trajectories, marking the candidates anchored at actions that changed between the anomalous and the normal run of the same task as positive within their anomalous graph; $\mathcal{L}_{\mathrm{normal}}$ suppresses high candidate scores inside normal graphs, discouraging a trivial solution in which every candidate is suspicious; and $\mathcal{L}_{\mathrm{rank}}$ requires that, for a task with one normal and one anomalous run, the anomalous graph's local score exceeds the normal graph's. Because the three auxiliary terms have different noise levels, they are combined through bounded uncertainty weighting in the spirit of multi-task loss balancing~\cite{kendall2017multitask}:
+\begin{equation}
+v=\operatorname{softplus}(s),\qquad w=\exp(-v)\in(0,1],
+\label{eq:uw}
+\end{equation}
+\begin{equation}
+\mathcal{U}(\mathcal{L};s)=w\,\mathcal{L}+v,
+\label{eq:uw2}
+\end{equation}
+where $s$ is the learnable uncertainty parameter of the corresponding auxiliary term. The bound keeps weights in $(0,1]$, so a noisy auxiliary term is down-weighted but never dominates by inflating its own uncertainty.
+
+\subsection{Safety Experience Generation}
+\label{sec:method-exp}
+
+In this subsection, we convert the localized evidence into knowledge that changes agent behavior. Detection without a locus cannot be acted upon, and a locus without transferable knowledge is lost at the end of the run. Specifically, at inference, a threshold $\tau$ tuned on validation data gates the graph-level decision, and only flagged trajectories undergo candidate ranking. Among near-tied candidates the smaller candidate is preferred, and heavily overlapping candidates are deduplicated; the Top-1 candidate serves as the primary risk evidence and the remaining top-ranked candidates serve as auxiliary evidence for evaluation. The \sexp{} generator receives only the detection scores, the anchor action, local node texts, the true semantic edges, and their justifications---\emph{never} the ground-truth label---and emits a structured record:
+\begin{center}
+\small
+\texttt{risk\_type}, \texttt{what\_went\_wrong}, \texttt{warning\_signals}, \texttt{recommended\_agent\_policy}, \texttt{supporting\_node\_ids}, \texttt{confidence}.
+\end{center}
+The record is grounded by construction: \texttt{supporting\_node\_ids} points into the candidate, so every claim can be checked against nodes and edges of the original graph. The experience is consumed as \emph{soft safety context}, not as a hard block: before subsequent tool calls, the agent re-checks goal consistency, input trustworthiness, parameter and data-scope authorization, and potential disclosure or unauthorized consequence of the pending operation. This design separates the contribution of the detector (when to act) from that of the localized evidence (what to check), which the controlled conditions of \S\ref{sec:defense} isolate experimentally. Qualitative cases are reported in \tbd{TBD-QUALITATIVE-CASES}.
+
+\subsection{Complexity Analysis}
+
+The computational complexity of the framework can be broken down by stage, each contributing differently based on the operations involved. Graph construction and candidate extraction are linear passes over the trajectory: recovering units and growing candidates visit each node and edge a constant number of times, giving $O(|V|+|E|)$ per trajectory. Text encoding dominates preprocessing: with $n_c$ chunks per node on average and a transformer encoder whose self-attention costs $O(n_t^2)$ for a chunk of $n_t$ tokens, encoding all nodes costs $O(|V|\,n_c\,n_t^{2})$, and encoding edge justifications adds $O(|E|\,n_t^{2})$. The shared Edge-GAT costs $O(L(|E|d+|V|d^{2}))$ per forward pass on the full graph; since each candidate contains at most $B$ nodes and $B$ edges, encoding all $K$ candidates adds $O(K\,L\,(Bd+Bd^{2}))$, and contextual scoring adds $O(Kd)$ for the fusion heads. Experience generation is a single generation call over the Top-1 candidate, whose prompt is bounded by $B$ nodes, so its cost is independent of the trajectory length. In summary, the training complexity is
+$O(|V|n_cn_t^{2}+|E|n_t^{2}+L(|E|d+|V|d^{2})+KL(Bd+Bd^{2}))$,
+and inference adds only one candidate-ranking pass over flagged trajectories. For a fixed candidate budget $K\cdot B$, the framework exhibits linear growth in trajectory size, in the same range as standard GNN encoders, which supports auditing long executions.
+
+\begin{algorithm}[htbp]
+\caption{Training, Inference, and Deployment Procedure of the Proposed Framework}
+\label{alg:framework}
+\begin{algorithmic}[1]
+\Require trajectory corpus with graph labels $\{(\mathcal{T}_i,y_{G,i})\}$; paired normal/anomalous executions $\mathcal{P}$; validation-tuned threshold $\tau$; hyper-parameters.
+\Ensure graph-level scores $\{p_G\}$; ranked candidates $\{p_k\}$; \sexp{} store $\mathcal{M}$.
+\State \textit{/* Stage 1: graph construction and candidate extraction (offline, \S\ref{sec:data}) */}
+\For{each trajectory $\mathcal{T}$}
+  \State build the \stg{} $G$: Phase~1 fixes the execution skeleton, Phase~2 adds cross-step dependencies with justification texts $t_{ij}$ (\S\ref{sec:data});
+  \State recover \aeu{}s by Eq.~\eqref{eq:unit} and grow \csg{}s by Eqs.~\eqref{eq:cand0}--\eqref{eq:cand} under the six constraints of \S\ref{sec:problem};
+\EndFor
+\State \textit{/* Stage 2: representation, encoding, and weakly supervised optimization */}
+\For{each training epoch}
+  \For{each mini-batch of graphs and candidate sets $(G,\mathcal{C})$}
+    \State encode chunk-gated node features and edge features by Eqs.~\eqref{eq:riskgate}--\eqref{eq:edgefeat};
+    \State encode $G$ and all candidates with the shared Edge-GAT by Eqs.~\eqref{eq:edgegat}--\eqref{eq:pool};
+    \State compute candidate margins and graph-level scores by Eqs.~\eqref{eq:qk}--\eqref{eq:sg};
+    \State build paired pseudo-labels from $\mathcal{P}$; optimize $\mathcal{L}_{\mathrm{total}}$ in Eq.~\eqref{eq:ltotal} with bounded weights in Eqs.~\eqref{eq:uw}--\eqref{eq:uw2};
+  \EndFor
+\EndFor
+\State \textit{/* Stage 3: inference and experience generation */}
+\For{each run with $p_G\geq\tau$}
+  \State rank candidates by $p_k$; deduplicate overlapping candidates and prefer the smaller near-tied one;
+  \State generate the \sexp{} from the Top-1 candidate: risk type, failure description, warning signals, recommended policy, supporting node ids, and confidence (\S\ref{sec:method-exp});
+  \State append the experience to the store $\mathcal{M}$;
+\EndFor
+\State \textit{/* Stage 4: deployment loop with experience-conditioned execution */}
+\While{the agent executes a new task}
+  \State before each tool call, apply the soft-context re-checks induced by $\mathcal{M}$: goal consistency, input trustworthiness, parameter and data-scope authorization, and disclosure risk (\S\ref{sec:method-exp});
+  \State execute the tool call and extend the \stg{} with the observed records;
+  \If{the run is flagged ($p_G\geq\tau$)}
+    \State compile the localized evidence into a new \sexp{} and append it to $\mathcal{M}$;
+  \EndIf
+\EndWhile
+\State \Return graph-level decisions, ranked candidates, and the \sexp{} store $\mathcal{M}$.
+\end{algorithmic}
+\end{algorithm}

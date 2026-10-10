@@ -1,0 +1,50 @@
+\documentclass[sigconf,anonymous]{acmart}
+
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
+\usepackage{placeins}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{cleveref}
+
+\definecolor{tbdred}{RGB}{153,0,0}
+\setlength{\emergencystretch}{3em}
+\newcommand{\tbd}[1]{\textcolor{tbdred}{\texttt{#1}}}
+\newcommand{\stg}{semantic trajectory graph}
+\newcommand{\aeu}{Action execution unit}
+\newcommand{\csg}{candidate subgraph}
+\newcommand{\csmil}{contextual semantic-subgraph MIL}
+\newcommand{\sexp}{safety experience}
+
+\begin{document}
+
+\title{Detect, Localize, and Defend: Action-Centered Semantic Trajectory Graphs for the Agentic Web}
+
+\author{Anonymous Author(s)}
+\affiliation{\institution{Anonymous Institution}\city{}\country{}}
+
+\begin{abstract}
+Language-model agents increasingly act on the Web through tools---searching, browsing, filling forms, and transacting on behalf of users---and every tool call can change external state. Existing screening either classifies flat text or scores an entire execution, leaving two questions unanswered: whether cross-step execution dependencies are represented at all, and which tool operation actually produced the risk. We reformulate agent risk analysis as joint graph-level anomaly detection and action-level subgraph localization over a \stg{} that encodes tasks, reasoning, tool calls, and environment states with typed, directed, and justified edges. We further propose \aeu{}s---inseparable semantic slices of intent, inputs, execution, and outcome---as the atomic unit of unit-wise \csg{}s, a \csmil{} model that aligns full trajectories and candidates through a shared edge-attention encoder and ranks risky actions under graph-level supervision with paired weak supervision, and \sexp{}s compiled from the top-ranked Action subgraph that condition later agent decisions, closing the loop from detection to defense; across \tbd{TBD-EVALUATION-SCOPE}, the proposed method achieves \tbd{TBD-KEY-RESULTS} under \tbd{TBD-PROTOCOL}.
+\keywords{agentic web, LLM agents, graph anomaly detection, subgraph localization, safety experience}
+\ccsdesc[500]{Security and privacy~$\rightarrow$~Intrusion detection systems}
+\ccsdesc[300]{Computing methodologies~$\rightarrow$~Artificial intelligence}
+\end{abstract}
+
+\maketitle
+
+\input{sections/introduction}
+\input{sections/related-work}
+\input{sections/problem}
+\input{sections/data}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/defense}
+\input{sections/vision}
+\input{sections/conclusion}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{refs}
+
+\end{document}

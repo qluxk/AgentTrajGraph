@@ -1,0 +1,74 @@
+\section{Experimental Setup and Evaluation Design}
+\label{sec:experiments}
+
+\subsection{Protocol}
+All experiments follow one protocol across corpora and tasks. Data are split under \tbd{TBD-SPLIT-PROTOCOL}, with grouping that prevents the same task family, site, or injected payload family from spanning training and test splits, and leakage controls audited as specified in \tbd{TBD-DATA-LEAKAGE-CONTROL}. Stochastic stages are repeated over \tbd{TBD-RANDOM-SEEDS} seeds. The anomaly class is expected to be the minority in every corpus; therefore \emph{PR-AUC} and anomaly-class \emph{precision/recall/F1} are treated as the primary detection statistics, with accuracy reported only as a reference point, since accuracy can be dominated by the majority class under imbalance. Sensitivity of operating points is analyzed separately from ranking quality in \tbd{TBD-THRESHOLD-ANALYSIS}.
+
+\subsection{Baselines and Input Paradigms}
+\label{sec:baselines}
+Baselines cover six families, spanning the input paradigms that matter for interpretation (Table~\ref{tab:main}). (i)~\emph{Text-trajectory screening}: safety models and classifiers that read the trajectory as flat text or segmented text, representative of guard-model practice~\cite{inan2023llama,liu2024calibration}. (ii)~\emph{Generic graph neural networks}: message passing without relation or edge awareness~\cite{velikovi2017graph}. (iii)~\emph{Relation- and edge-aware graph models}: encoders that consume typed, directed, attributed graphs~\cite{schlichtkrull2017modeling,hu2020heterogeneous,brody2021attentive}. (iv)~\emph{Graph anomaly detection}: graph-level scoring methods~\cite{tang2022rethinking,liu2021anomaly,wang2026glass}. (v)~\emph{LLM-as-a-Judge}: generative judges over whole trajectories~\cite{zheng2023judging,yuan2024rjudge,zhuge2024agentasajudge}. (vi)~\emph{Content-safety guard models}: deployed moderation systems applied to serialized runs. The final baseline roster, configurations, and the fairness protocol are recorded in \tbd{TBD-BASELINE-LIST} and \tbd{TBD-BASELINE-CONFIGURATIONS}. One reporting rule is fixed in advance: methods that read flat text and methods that read the \stg{} are \emph{not} presented as operating under identical input conditions, and comparison tables group them accordingly (\tbd{TBD-FAIR-COMPARISON-PROTOCOL}).
+
+\begin{table}[t]
+\caption{Main graph-level detection comparison. Groups are separated by input paradigm; cells are completed from the experiments.}
+\label{tab:main}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Method & ROC-AUC & PR-AUC & $F_1^{anom}$ & FPR & Bal-Acc \\
+\midrule
+\emph{Text-trajectory screening} & & & & & \\
+\emph{Generic GNN} & & & & & \\
+\emph{Relation/edge-aware GNN} & & & & & \\
+\emph{Graph anomaly detection} & & & & & \\
+\emph{LLM-as-a-Judge} & & & & & \\
+\emph{Guard model} & & & & & \\
+\emph{Ours (full)} & & & & & \\
+\midrule
+\multicolumn{6}{c}{\tbd{TBD-MAIN-DETECTION-TABLE}} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Detection Questions}
+\textbf{RQ1.} Does joint global--local modeling improve graph-level detection over single-granularity scoring? The full model is compared against full-graph-only and Action-subgraph-only variants under the global/local ablation \tbd{TBD-GLOBAL-LOCAL-ABLATION}; the outcome, its significance, and the threshold analysis are recorded in \tbd{TBD-DETECTION-SIGNIFICANCE} and \tbd{TBD-THRESHOLD-ANALYSIS}. The mechanism claim under test is that the local branch adds operation-level evidence that a whole-graph score cannot express, while the global branch supplies behavioral context that a subgraph alone lacks; the ablation is designed so that each branch's marginal value is directly readable from the table.
+
+\subsection{Localization Questions}
+\textbf{RQ2.} Does localization recover the responsible operations? Metrics are Action Hit@1, Hit@$K$/Recall@$K$, node- and edge-level IoU between the predicted candidate and the ground-truth changed-action context, and candidate size. Candidate-generation coverage is reported separately in \tbd{TBD-CANDIDATE-COVERAGE} and never substituted for final localization: a candidate set that contains the true locus does not imply the model ranks it first. Results appear in \tbd{TBD-LOCALIZATION-RESULTS}; qualitative cases are curated in \tbd{TBD-QUALITATIVE-CASES}.
+
+\begin{table}[t]
+\caption{Action-level localization. Coverage of the candidate stage is reported separately from final ranking.}
+\label{tab:loc}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Candidate scheme & Hit@1 & Hit@$K$ & IoU$_n$ & IoU$_e$ & Size \\
+\midrule
+\emph{Fixed-hop candidates} & & & & & \\
+\emph{Action-unit candidates (ours)} & & & & & \\
+\midrule
+\multicolumn{6}{c}{\tbd{TBD-LOCALIZATION-TABLE}} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\textbf{RQ3.} Is the \aeu{} the right atomic unit? The central comparison is fixed-hop candidate construction versus unit-wise construction, holding the encoder and objective fixed, on coverage, final Hit@$K$, IoU, and candidate size (\tbd{TBD-FIXED-HOP-VS-ACTION-UNIT}). This isolates the representation choice from the scoring machinery: any difference must come from where candidate boundaries fall, not from parameters.
+
+\subsection{Ablation Questions}
+\textbf{RQ4.} Which representation and objective components carry the effect? The planned grid removes: edge justification text; relation type; directionality; replaces chunk-risk-max pooling with truncation or chunk-mean; fixes versus learns $\alpha,\beta$; removes the shared LayerNorm alignment; removes paired pseudo-labels; and replaces bounded uncertainty weighting with fixed auxiliary weights. Results are recorded in \tbd{TBD-REPRESENTATION-ABLATIONS} and \tbd{TBD-OBJECTIVE-ABLATIONS} (Table~\ref{tab:ablation}).
+
+\begin{table}[t]
+\caption{Representation and objective ablations.}
+\label{tab:ablation}
+\begin{tabular}{lccc}
+\toprule
+Variant & ROC-AUC & PR-AUC & Hit@1 \\
+\midrule
+\emph{Representation ablations} & & & \\
+\emph{Objective ablations} & & & \\
+\midrule
+\multicolumn{4}{c}{\tbd{TBD-ABLATION-TABLE}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{RQ5.} Does the pipeline transfer across input paradigms and corpora? The same protocol is run on \tbd{TBD-DATASET-NAME-A}, \tbd{TBD-DATASET-NAME-B}, and \tbd{TBD-PRIVATE-DATASET-NAME} with per-corpus statistics in \tbd{TBD-DATASET-STATISTICS}; cross-corpus variation is where representation choices are most likely to matter, since browsing-style runs and tool-benchmark runs differ in graph shape.

@@ -1,0 +1,12 @@
+tokenkey.txt
+__paperguru_tmp/
+GLAD In WWW26.pdf
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+uploads/

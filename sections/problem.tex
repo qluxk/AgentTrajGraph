@@ -1,0 +1,76 @@
+\section{Problem Formulation}
+\label{sec:problem}
+
+\subsection{Tool-Using Agent Trajectories and Labels}
+A \emph{trajectory} $\mathcal{T}$ records an agent run from receiving a task to producing a final result. It contains the user goal, plans and reflections, every tool invocation with its parameters, every environment-returned state, and the final result; implementations may interleave these records, and our representation only requires that each record carry its segment text and role. Each trajectory carries a graph label
+\begin{equation}
+y_G \in \{0,1\},
+\label{eq:label}
+\end{equation}
+where $y_G=0$ denotes a normal completion or a successful defense against an attempted attack, and $y_G=1$ denotes that an attack produced a wrong, unauthorized, or leaking outcome. Data sources, labeling protocol, and quality control are reported as \tbd{TBD-DATA-PROVENANCE}, \tbd{TBD-LABELING-PROTOCOL}, and \tbd{TBD-DATA-QUALITY-CONTROL}.
+
+\subsection{Semantic Trajectory Graph}
+We represent $\mathcal{T}$ as a directed attributed graph
+\begin{equation}
+G=(V,E,X_V,X_E),
+\label{eq:graph}
+\end{equation}
+where $V$ is the node set, $E\subseteq V\times V$ the directed edge set, and $X_V$, $X_E$ the node and edge features described in \S\ref{sec:data}. Nodes carry one of four types reflecting execution roles (Table~\ref{tab:nodetypes}), and edges carry one of five relation types reflecting execution semantics (Table~\ref{tab:edgetypes}).
+
+\begin{table}[t]
+\caption{Node types of the \stg{}.}
+\label{tab:nodetypes}
+\begin{tabular}{@{}lp{0.66\linewidth}@{}}
+\toprule
+Node type & Meaning \\
+\midrule
+\texttt{Problem} & user task or original goal \\
+\texttt{Thinking} & agent plan, analysis, or reflection \\
+\texttt{Action} & agent-initiated tool call \\
+\texttt{State} & tool output, environment feedback, or final state \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Edge types of the \stg{}. Direction always follows execution flow.}
+\label{tab:edgetypes}
+\begin{tabular}{@{}lp{0.66\linewidth}@{}}
+\toprule
+Edge type & Meaning \\
+\midrule
+\texttt{computes\_from} & an Action produces a State \\
+\texttt{depends\_on} & later reasoning or operation uses earlier information \\
+\texttt{sequential} & execution-order relation only \\
+\texttt{reflects} & reasoning or conclusion reflects a state \\
+\texttt{branches\_from} & a plan branches from shared prior information \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Action Execution Units}
+For an action $a\in V$, the \aeu{} is the inseparable semantic slice
+\begin{equation}
+U_a=\{a\}\cup R_a\cup I_a\cup O_a\cup F_a,
+\label{eq:unit}
+\end{equation}
+where $R_a$ is the \texttt{Thinking} chain recovered along semantic in-edges that justified $a$; $I_a$ is the set of \texttt{State}/\texttt{Problem} nodes feeding $a$ or its reasoning; $O_a$ is the \texttt{State} produced by $a$; and $F_a$ is the set of reflections or results directly tied to $O_a$. The typical structure is
+\begin{center}
+\emph{input State/Problem $\rightarrow$ Thinking chain $\rightarrow$ Action $\rightarrow$ output State,}
+\end{center}
+and the definition takes one complete tool operation as the minimal granularity rather than a node distance. This choice is deliberate: every candidate evaluated downstream corresponds to something the agent actually did, with the evidence that justified it attached.
+
+\subsection{Dependency-Aware Candidates}
+If the output state of unit $U_{a_i}$ is consumed by unit $U_{a_j}$, we add a unit dependency $U_{a_i}\rightarrow U_{a_j}$. For an anchor unit, candidates are grown by adding complete predecessor units layer by layer:
+\begin{equation}
+C_a^{(0)}=U_a,
+\label{eq:cand0}
+\end{equation}
+\begin{equation}
+C_a^{(l+1)}=C_a^{(l)}\cup\bigcup_{U_p\in\operatorname{Pred}(C_a^{(l)})}U_p .
+\label{eq:cand}
+\end{equation}
+Candidates satisfy six constraints: each candidate is anchored at a real Action; all nodes and edges come from the original graph; each candidate is connected through real edges; each expansion adds complete execution units; independent branches form separate candidates while converging actions may form joint-context candidates; and the candidate budget may not remove every anchor candidate of any action. The candidate set of a trajectory is $\mathcal{C}=\{C_k\}$.
+
+\subsection{Tasks}
+Given $G$ with features and the candidate set $\mathcal{C}$, the model must solve three coupled tasks. \emph{Graph-level detection}: estimate $p_G=\Pr(y_G=1\mid G)$. \emph{Action-level localization}: rank candidates $C_k\in\mathcal{C}$ by $p_k=\Pr(C_k\ \text{is a risk locus}\mid G)$, where the ground-truth locus for training purposes is derived only from weak signals (\S\ref{sec:method}). \emph{Defense}: convert the top-ranked localized evidence into a structured \sexp{} that changes agent behavior on future, similar situations, degrading attack success while preserving normal task utility. The three tasks share one mechanism chain: propagation structure motivates the graph; the execution boundary motivates the unit; and usable defense motivates keeping localization and evidence generation coupled to detection.

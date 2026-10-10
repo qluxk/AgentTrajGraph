@@ -1,0 +1,27 @@
+\section{Data and Semantic Graph Construction}
+\label{sec:data}
+
+\subsection{Corpora}
+Our study draws on three abstract corpora, whose concrete identities, sizes, and distributions are reported in \tbd{TBD-DATASET-NAME-A}, \tbd{TBD-DATASET-NAME-B}, \tbd{TBD-PRIVATE-DATASET-NAME}, and \tbd{TBD-DATASET-STATISTICS} (Table~\ref{tab:dataset}). \emph{Public Dataset~A} consists of tool-integrated agent runs under injection scenarios, where the environment exposes tools and adversarial content enters through tool results; runs end in either a successful completion or a compromised outcome. \emph{Public Dataset~B} consists of web-agent interaction runs over realistic sites, providing the browsing-style executions that the \stg{} must also cover. \emph{Private Dataset} is an in-house corpus of paired normal/anomalous executions of the same tasks, collected under the provenance and labeling protocol recorded in \tbd{TBD-DATA-PROVENANCE} and \tbd{TBD-LABELING-PROTOCOL}. Anomaly ratios, split protocol, grouping, and leakage controls are reported in \tbd{TBD-ANOMALY-RATIO}, \tbd{TBD-SPLIT-PROTOCOL}, and \tbd{TBD-DATA-LEAKAGE-CONTROL}; seeds for stochastic stages are reported in \tbd{TBD-RANDOM-SEEDS}. Trajectories that contain no \texttt{Action} node are excluded, since the formulation anchors all candidates at real tool operations.
+
+\begin{table}[t]
+\caption{Corpus overview. All fields are completed by the authors from the underlying corpora.}
+\label{tab:dataset}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llllll}
+\toprule
+Corpus & Source & Tasks & Label source & \#Runs & Anomaly rate \\
+\midrule
+\multicolumn{6}{c}{\tbd{TBD-DATASET-STATISTICS}} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Labels and Matching Control}
+A trajectory is anomalous when the executed run ends in a wrong, unauthorized, or leaking outcome attributable to injected or otherwise hostile influence; a normal run either completes correctly or successfully resists an attempted attack. Labels are produced under the protocol in \tbd{TBD-LABELING-PROTOCOL} with quality control described in \tbd{TBD-DATA-QUALITY-CONTROL}. For the paired corpus, the matching control matters as much as the labels: a paired run pair must share the task, the agent configuration, and the tool inventory, differing only in the presence and placement of hostile influence, so that changed actions between the two runs identify candidate risk loci for weak supervision. Because benchmarks differ in what their success metrics capture, we record, for each source, exactly which ground-truth signal was available at which granularity.
+
+\subsection{Two-Phase Graph Construction}
+Construction proceeds in two phases with a strict ordering. \emph{Phase 1 (execution skeleton)} recovers the basic loop from the trajectory records: \texttt{Thinking}$\rightarrow$\texttt{Action}$\rightarrow$\texttt{State} chains, \texttt{computes\_from} edges from each action to its output state, \texttt{depends\_on} edges from each action to the state or problem that triggered it, and \texttt{reflects} edges from reflections to the states they discuss. \emph{Phase 2 (dependency expansion)} adds high-confidence cross-step dependencies, branch (\texttt{branches\_from}) and convergence edges that Phase~1 could not determine from local records alone, using textual alignment between record contents. Two invariants hold throughout: Phase~2 may not modify nodes, node text, or edges fixed by Phase~1, and the construction pipeline never receives the graph label $y_G$, so no leakage path exists from labels into structure. Every edge additionally carries a \emph{justification text} $t_{ij}$---the quotation or reference that supports why the dependency was added---which later feeds the edge encoder (\S\ref{sec:method}) and makes each inferred dependency auditable.
+
+\subsection{Structural Audit}
+Because downstream localization depends on graph quality, we audit the constructed graphs before training: coverage of executed actions (every action must have at least one incoming dependency edge and one outgoing \texttt{computes\_from} edge), candidate feasibility (every anchor must admit at least one candidate under the constraints of \S\ref{sec:problem}), and stability of unit boundaries across re-construction runs. Audit outcomes and any structural failure modes are reported in \tbd{TBD-OBSERVED-LIMITATIONS}. The same audit defines the candidate-coverage statistic reported alongside localization results, so that candidate construction quality is never confused with final localization accuracy.

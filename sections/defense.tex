@@ -1,0 +1,32 @@
+\section{Experience-Based Defense Evaluation}
+\label{sec:defense}
+
+\subsection{Closed-Loop Protocol}
+The defense experiment measures whether localized evidence changes agent behavior on future, similar situations, and---critically---which part of the pipeline produces the change. The protocol instantiates the agent under the target attack suite, injects \sexp{}s as \emph{soft safety context} before each tool call, and compares attack success and normal utility across conditions. All conditions share the agent configuration, the tool inventory, and the task distribution; the \emph{only} manipulated variable is the content of the safety context. Attack success rate and task success rate follow the definitions of the underlying benchmarks~\cite{debenedetti2024agentdojo,zhan2024injecagent,tur2025safearena,levy2024stwebagentbench}, and we additionally track \emph{false triggers} (defensive interventions on benign operations) and intervention cost. Statistical comparisons between paired conditions use \tbd{TBD-DEFENSE-SIGNIFICANCE}. Because adversaries adapt~\cite{zhan2025adaptive,syros2026muzzle}, reported suppression reflects the studied attack suite rather than a permanent property, which the deployment discussion in \S\ref{sec:vision} takes up. The full defense table and its results are recorded in \tbd{TBD-DEFENSE-TABLE} (Table~\ref{tab:defense}).
+
+\begin{table}[t]
+\caption{Defense conditions and outcomes. Conditions differ only in the safety-context content; numbers are completed from the experiments.}
+\label{tab:defense}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Condition & ASR$\downarrow$ & Task SR & False trig. & Cost & $\Delta$ASR \\
+\midrule
+Attack-only baseline & & & & -- & -- \\
+Generic warning & & & & & \\
+Full-graph experience & & & & & \\
+Random subgraph experience & & & & & \\
+Detected Action-subgraph exp. (ours) & & & & & \\
+Oracle Action-subgraph exp. & & & & & \\
+\midrule
+\multicolumn{6}{c}{\tbd{TBD-DEFENSE-TABLE}} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Controlled Conditions}
+\label{sec:defense-conditions}
+Six conditions separate confounds that generic warnings cannot. \emph{Attack-only} calibrates the undefended success rate. \emph{Generic warning} injects a fixed alert that an attack may be present, with no localized evidence; it captures placebo effects of ``be careful'' prompting and is the condition most defenses implicitly implement. \emph{Full-graph experience} injects the generator's output over the \emph{entire} trajectory, testing whether the benefit comes from localization or merely from more grounded text. \emph{Random subgraph experience} injects an experience grounded in a random connected \csg{}, controlling for grounding structure without risk relevance. \emph{Detected Action-subgraph experience} is the full pipeline: the detector flags the run, the ranker selects the candidate, and the generator compiles the experience. \emph{Oracle Action-subgraph experience} grounds the experience in the true risk locus, bounding what perfect localization could achieve. The gap between the detected and oracle conditions is therefore an upper-bound estimate of the localization component's headroom, and the gap between detected and generic conditions isolates the value of operation-level evidence over generic caution.
+
+\subsection{What Each Comparison Answers}
+Three contrasts carry the interpretation. Detected versus \emph{generic} answers whether structured, operation-anchored evidence matters beyond alerting the agent that something might be wrong. Detected versus \emph{full-graph} answers whether localization, rather than additional grounded context, is the operative ingredient. Detected versus \emph{random subgraph} answers whether the grounding subgraph must be risk-relevant, not merely well-formed and connected. Utility is evaluated on normal runs, where a well-calibrated system must not intervene: false-trigger rate and utility degradation on the normal set are reported alongside attack suppression, since a defense that refuses benign operations fails the deployment test regardless of its attack success reduction. Cross-configuration generalization---experiences generated from one agent configuration consumed by another---is reported in \tbd{TBD-DEFENSE-TABLE} as an explicit column, because \sexp{}s are intended as reusable artifacts rather than session-bound outputs. Qualitative examples of generated experiences and induced policy changes appear in \tbd{TBD-QUALITATIVE-CASES}.
