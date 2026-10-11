@@ -1,0 +1,6 @@
+command: python3 guard/run_alignmentcheck_baseline.py --model-path /data/lab/ms_cache/models/LLM-Research--Meta-Llama-3.1-8B-Instruct/snapshots/master --splits guard/../splitgen_baseline_seed42/splits.json --bundle-root guard/../ATBench-ToolTask-Bundle --out guard/results/alignmentcheck_llama31_8b_test.jsonl --device cuda
+start: 2026-10-11T13:38:31+00:00
+end: 2026-10-11T13:39:24+00:00
+exit: 1
+host: 0dfa9538f5f4
+NVIDIA GeForce RTX 4090
