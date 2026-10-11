@@ -1,0 +1,6 @@
+command: cd guard && python3 run_guard_baseline.py --model-path /data/lab/ms_cache/models/Shanghai_AI_Laboratory--AgentDoG-Qwen3-4B/snapshots/master --model-variant agentdog --cases cases/test_cases_agentdog.jsonl --out results/agentdog_qwen3_4b_test_v2.jsonl --device cuda
+start: 2026-10-11T13:09:49+00:00
+end: 2026-10-11T13:09:49+00:00
+exit: 127
+host: 0dfa9538f5f4
+NVIDIA GeForce RTX 4090
