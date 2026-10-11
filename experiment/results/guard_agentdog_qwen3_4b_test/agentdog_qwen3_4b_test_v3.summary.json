@@ -3,8 +3,8 @@
   "model_variant": "agentdog",
   "n": 269,
   "n_abnormal": 40,
-  "roc_auc": 0.3929585152838428,
-  "pr_auc": 0.11622191344242613,
+  "roc_auc": 0.40764192139737987,
+  "pr_auc": 0.12039192450175433,
   "candidates": [
     "safe",
     "unsafe"
