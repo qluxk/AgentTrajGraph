@@ -1,0 +1,13 @@
+{
+  "bundle": "../../ToolTask-Benchmark",
+  "splits": "../training/tooltask_edge_gat_15pct_seed42/splits.json",
+  "all_abnormal_graphs": 697,
+  "used_abnormal_graphs": 268,
+  "unused_abnormal_graphs": 429,
+  "cases": 429,
+  "missing_trajectory_cases": [],
+  "sample_count": 100,
+  "sample_seed": 20261006,
+  "sampled_case_ids_sha256": "8be5a76212e279011a9cfb86fcf9bec8e0008ee192bfede4a03b9e07cf9031a5",
+  "judge_reference_note": "recorded compromised Agent path used as hidden evaluation reference; private attack audit not included in bundle"
+}

@@ -1,0 +1,196 @@
+{
+  "experience": {
+    "completed": 100,
+    "asr": 0.21,
+    "ci95": [
+      0.14165549531645788,
+      0.2998014930196232
+    ],
+    "attack_success_count": 21,
+    "per_domain": {
+      "web": {
+        "n": 27,
+        "asr": 0.1111111111111111
+      },
+      "file": {
+        "n": 22,
+        "asr": 0.2727272727272727
+      },
+      "messaging": {
+        "n": 27,
+        "asr": 0.3333333333333333
+      },
+      "email": {
+        "n": 24,
+        "asr": 0.125
+      }
+    },
+    "vs_baseline": {
+      "paired_cases": 100,
+      "asr_baseline": 0.26,
+      "asr_arm": 0.21,
+      "discordant_baseline_only": 11,
+      "discordant_arm_only": 6,
+      "mcnemar_exact_p": 0.332305908203125
+    }
+  },
+  "generic": {
+    "completed": 13,
+    "asr": 0.3076923076923077,
+    "ci95": [
+      0.12680497161618087,
+      0.5763111218666236
+    ],
+    "attack_success_count": 4,
+    "per_domain": {
+      "messaging": {
+        "n": 8,
+        "asr": 0.375
+      },
+      "file": {
+        "n": 3,
+        "asr": 0.0
+      },
+      "email": {
+        "n": 2,
+        "asr": 0.5
+      }
+    },
+    "vs_baseline": {
+      "paired_cases": 13,
+      "asr_baseline": 0.46153846153846156,
+      "asr_arm": 0.3076923076923077,
+      "discordant_baseline_only": 2,
+      "discordant_arm_only": 0,
+      "mcnemar_exact_p": 0.5
+    }
+  },
+  "raw": {
+    "completed": 13,
+    "asr": 0.23076923076923078,
+    "ci95": [
+      0.08179379092465713,
+      0.5025687399512693
+    ],
+    "attack_success_count": 3,
+    "per_domain": {
+      "messaging": {
+        "n": 8,
+        "asr": 0.375
+      },
+      "file": {
+        "n": 3,
+        "asr": 0.0
+      },
+      "email": {
+        "n": 2,
+        "asr": 0.0
+      }
+    },
+    "vs_baseline": {
+      "paired_cases": 13,
+      "asr_baseline": 0.46153846153846156,
+      "asr_arm": 0.23076923076923078,
+      "discordant_baseline_only": 3,
+      "discordant_arm_only": 0,
+      "mcnemar_exact_p": 0.25
+    }
+  },
+  "full": {
+    "completed": 13,
+    "asr": 0.15384615384615385,
+    "ci95": [
+      0.04325726318273798,
+      0.4223517050863101
+    ],
+    "attack_success_count": 2,
+    "per_domain": {
+      "messaging": {
+        "n": 8,
+        "asr": 0.25
+      },
+      "file": {
+        "n": 3,
+        "asr": 0.0
+      },
+      "email": {
+        "n": 2,
+        "asr": 0.0
+      }
+    },
+    "vs_baseline": {
+      "paired_cases": 13,
+      "asr_baseline": 0.46153846153846156,
+      "asr_arm": 0.15384615384615385,
+      "discordant_baseline_only": 4,
+      "discordant_arm_only": 0,
+      "mcnemar_exact_p": 0.125
+    }
+  },
+  "shuffled": {
+    "completed": 13,
+    "asr": 0.15384615384615385,
+    "ci95": [
+      0.04325726318273798,
+      0.4223517050863101
+    ],
+    "attack_success_count": 2,
+    "per_domain": {
+      "messaging": {
+        "n": 8,
+        "asr": 0.125
+      },
+      "file": {
+        "n": 3,
+        "asr": 0.0
+      },
+      "email": {
+        "n": 2,
+        "asr": 0.5
+      }
+    },
+    "vs_baseline": {
+      "paired_cases": 13,
+      "asr_baseline": 0.46153846153846156,
+      "asr_arm": 0.15384615384615385,
+      "discordant_baseline_only": 4,
+      "discordant_arm_only": 0,
+      "mcnemar_exact_p": 0.125
+    }
+  },
+  "experience_recall": {
+    "completed": 100,
+    "asr": 0.16,
+    "ci95": [
+      0.10095202349473717,
+      0.24420444558894414
+    ],
+    "attack_success_count": 16,
+    "per_domain": {
+      "web": {
+        "n": 27,
+        "asr": 0.0
+      },
+      "file": {
+        "n": 22,
+        "asr": 0.2727272727272727
+      },
+      "messaging": {
+        "n": 27,
+        "asr": 0.2222222222222222
+      },
+      "email": {
+        "n": 24,
+        "asr": 0.16666666666666666
+      }
+    },
+    "vs_baseline": {
+      "paired_cases": 100,
+      "asr_baseline": 0.26,
+      "asr_arm": 0.16,
+      "discordant_baseline_only": 14,
+      "discordant_arm_only": 4,
+      "mcnemar_exact_p": 0.0308837890625
+    }
+  }
+}

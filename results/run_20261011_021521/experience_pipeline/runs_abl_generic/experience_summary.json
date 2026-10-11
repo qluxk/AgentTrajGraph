@@ -1,0 +1,13 @@
+{
+  "dataset": "tooltask",
+  "condition": "experience",
+  "selected_case_count": 13,
+  "completed_count": 13,
+  "failed_count": 0,
+  "attack_success_count": 4,
+  "attack_success_rate": 0.3076923076923077,
+  "execute_decisions": 45,
+  "revise_decisions": 9,
+  "stop_decisions": 1,
+  "method_note": "Deterministic recorded-environment replay; original future Agent steps are hidden until their execution checkpoint."
+}

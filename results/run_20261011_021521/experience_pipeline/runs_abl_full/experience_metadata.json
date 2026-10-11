@@ -1,0 +1,10 @@
+{
+  "input_fingerprint": "e84ee2762d88e6a58c77cdda49f44c89d17b0a4fd66d0b7d7159d73cc4994e83",
+  "dataset": "tooltask",
+  "condition": "experience",
+  "model": "gpt-5.5-fast",
+  "judge_model": "gpt-5.5",
+  "all_case_count": 13,
+  "selected_case_count": 13,
+  "experience_count": 9
+}

@@ -1,0 +1,96 @@
+{
+  "best_epoch": 9,
+  "device": "cuda",
+  "detector_checkpoint": "/data/lab/atglad/GAD-Method-Portable/training/tooltask_edge_gat_15pct_seed42/best_model.pt",
+  "detector_model_type": "edge_gat",
+  "detector_frozen": true,
+  "detector_state_fingerprint": "0e86a1bb55764e9ee11994675c42e7e43d92fa3a8f8fad4064a3ffb2c9511388",
+  "scorer_config": {
+    "node_dim": 64,
+    "graph_dim": 128,
+    "node_type_count": 4,
+    "type_embedding_dim": 16,
+    "hidden_dim": 64,
+    "dropout": 0.2,
+    "aggregation": "max",
+    "top_k": 3
+  },
+  "lambda_sparse": 0.01,
+  "risk_graph_threshold": 0.28678473830223083,
+  "metrics": {
+    "train": {
+      "accuracy": 0.8379888268156425,
+      "precision": 0.47491638795986624,
+      "recall": 0.7553191489361702,
+      "f1": 0.741308696744378,
+      "macro_f1": 0.741308696744378,
+      "abnormal_f1": 0.5831622176591376,
+      "confusion_matrix": [
+        [
+          908,
+          157
+        ],
+        [
+          46,
+          142
+        ]
+      ],
+      "roc_auc": 0.9039506542802916,
+      "pr_auc": 0.6191688468965134,
+      "loss": 0.27319936442403725,
+      "classification_loss": 0.27235264833555733,
+      "sparsity_loss": 0.08467165949767053,
+      "count": 1253
+    },
+    "val": {
+      "accuracy": 0.7865168539325843,
+      "precision": 0.36507936507936506,
+      "recall": 0.575,
+      "f1": 0.6571756808505846,
+      "macro_f1": 0.6571756808505846,
+      "abnormal_f1": 0.44660194174757284,
+      "confusion_matrix": [
+        [
+          187,
+          40
+        ],
+        [
+          17,
+          23
+        ]
+      ],
+      "roc_auc": 0.80715859030837,
+      "pr_auc": 0.4295374046479397,
+      "loss": 0.3279662778538265,
+      "classification_loss": 0.32782325617383035,
+      "sparsity_loss": 0.014301904271381179,
+      "count": 267,
+      "threshold_selection_abnormal_f1": 0.44660194174757284
+    },
+    "test": {
+      "accuracy": 0.7509293680297398,
+      "precision": 0.2923076923076923,
+      "recall": 0.475,
+      "f1": 0.6035851754096557,
+      "macro_f1": 0.6035851754096557,
+      "abnormal_f1": 0.3619047619047619,
+      "confusion_matrix": [
+        [
+          183,
+          46
+        ],
+        [
+          21,
+          19
+        ]
+      ],
+      "roc_auc": 0.7330786026200873,
+      "pr_auc": 0.26619929977519147,
+      "loss": 0.3889085665954533,
+      "classification_loss": 0.38877986753740273,
+      "sparsity_loss": 0.012869827200045815,
+      "count": 269
+    }
+  },
+  "note": "Graph Detector files, weights, and graph-level evaluation outputs are unchanged."
+}

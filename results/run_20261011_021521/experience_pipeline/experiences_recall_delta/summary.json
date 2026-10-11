@@ -1,0 +1,19 @@
+{
+  "input_graph_count": 58,
+  "detector_selected_anomaly_count": 58,
+  "ground_truth_labels_sent_to_llm": false,
+  "llm_called": true,
+  "completed_judgment_count": 79,
+  "reusable_experience_count": 53,
+  "failed_judgment_count": 1,
+  "token_usage": {
+    "prompt_tokens": 863314,
+    "completion_tokens": 77589,
+    "total_tokens": 940903
+  },
+  "outputs": {
+    "llm_inputs": "/data/lab/atglad/GAD-Method-Portable/server_upload_sbert_rgcn/experiments/unused_attack_mitigation/experiences_recall_delta/llm_inputs.jsonl",
+    "llm_judgments": "/data/lab/atglad/GAD-Method-Portable/server_upload_sbert_rgcn/experiments/unused_attack_mitigation/experiences_recall_delta/llm_judgments.jsonl",
+    "reusable_experiences": "/data/lab/atglad/GAD-Method-Portable/server_upload_sbert_rgcn/experiments/unused_attack_mitigation/experiences_recall_delta/reusable_experiences.json"
+  }
+}

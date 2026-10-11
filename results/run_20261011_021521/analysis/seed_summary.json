@@ -1,0 +1,52 @@
+[
+  {
+    "seed": 42,
+    "test_roc_auc": null,
+    "test_pr_auc": null,
+    "test_accuracy": null,
+    "test_recall": null,
+    "test_abnormal_f1": null,
+    "threshold": null,
+    "best_epoch": 5
+  },
+  {
+    "seed": 43,
+    "test_roc_auc": null,
+    "test_pr_auc": null,
+    "test_accuracy": null,
+    "test_recall": null,
+    "test_abnormal_f1": null,
+    "threshold": null,
+    "best_epoch": 7
+  },
+  {
+    "seed": 44,
+    "test_roc_auc": null,
+    "test_pr_auc": null,
+    "test_accuracy": null,
+    "test_recall": null,
+    "test_abnormal_f1": null,
+    "threshold": null,
+    "best_epoch": 6
+  },
+  {
+    "seed": 45,
+    "test_roc_auc": null,
+    "test_pr_auc": null,
+    "test_accuracy": null,
+    "test_recall": null,
+    "test_abnormal_f1": null,
+    "threshold": null,
+    "best_epoch": 10
+  },
+  {
+    "seed": 46,
+    "test_roc_auc": null,
+    "test_pr_auc": null,
+    "test_accuracy": null,
+    "test_recall": null,
+    "test_abnormal_f1": null,
+    "threshold": null,
+    "best_epoch": 6
+  }
+]
