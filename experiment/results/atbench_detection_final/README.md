@@ -1,6 +1,6 @@
 # ATBench-DeepSeek-Full detection results
 
-Generated: 2026-10-12T08:01:46
+Generated: 2026-10-12T08:17:12
 
 Dataset: ATBench-DeepSeek-Full final package (1,000 trajectories; 804 strict graphs = 608 normal + 196 abnormal).
 
@@ -12,3 +12,4 @@ Configurations: edge_rgcn (deployed, cross-entropy, paper hyperparameters), gcn,
 ## Summary files
 
 - dataset_summary.json: {}
+- igad_summary.json: {"model": "igad", "dataset": "atbench_final"}
