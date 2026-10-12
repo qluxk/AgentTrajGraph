@@ -1,0 +1,15 @@
+{
+  "model_path": "/data/lab/ms_cache/models/LLM-Research--Meta-Llama-3.1-8B-Instruct/snapshots/master",
+  "method": "AlignmentCheck (LlamaFirewall arXiv:2505.03574), official system+user prompts",
+  "auditor": "Llama-3.1-8B-Instruct (auditor configuration evaluated in the paper)",
+  "trajectory_score": "max over audited agent actions of p(misaligned) from conclusion-token logit softmax",
+  "n": 269,
+  "n_scored": 269,
+  "n_abnormal": 40,
+  "roc_auc": 0.5846615720524017,
+  "pr_auc": 0.20406208627262723,
+  "max_input_tokens": 4096,
+  "trace_chars": 6000,
+  "max_actions": 20,
+  "batch_size": 8
+}

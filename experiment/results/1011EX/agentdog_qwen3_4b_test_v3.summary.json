@@ -1,0 +1,15 @@
+{
+  "model_path": "/data/lab/ms_cache/models/Shanghai_AI_Laboratory--AgentDoG-Qwen3-4B/snapshots/master",
+  "model_variant": "agentdog",
+  "n": 269,
+  "n_abnormal": 40,
+  "roc_auc": 0.40764192139737987,
+  "pr_auc": 0.12039192450175433,
+  "candidates": [
+    "safe",
+    "unsafe"
+  ],
+  "scoring": "first-answer-token constrained logprob softmax",
+  "max_input_tokens": 8192,
+  "n_truncated": 21
+}
