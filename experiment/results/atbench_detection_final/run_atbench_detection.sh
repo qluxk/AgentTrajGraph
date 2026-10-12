@@ -2,7 +2,7 @@
 # ATBench-DeepSeek-Full detection experiments (final package: 804 strict graphs)
 # Unified paper protocol: 7:1.5:1.5 split, 15% abnormal per split, split-seed 2026, seeds 42-46.
 set -uo pipefail
-ROOT=/data/lab/GAD-Method-Portable/GAD-Method-Portable/server_upload_sbert_rgcn
+ROOT=/data/lab/GAD-Method-Portable/server_upload_sbert_rgcn
 cd "$ROOT"
 export TOKENIZERS_PARALLELISM=false CUBLAS_WORKSPACE_CONFIG=:4096:8
 export HF_HOME="$ROOT/.cache/huggingface"
@@ -24,7 +24,7 @@ run_one () {
     ln -sf "$cache/sbert_embeddings.pt" "$out/sbert_embeddings.pt"
     [ -f "$cache/edge_sbert_embeddings.pt" ] && ln -sf "$cache/edge_sbert_embeddings.pt" "$out/edge_sbert_embeddings.pt"
   fi
-  python "$@" >> "$log" 2>&1
+  python3 "$@" >> "$log" 2>&1
   local rc=$?
   echo "$(basename "$out") rc=$rc $(date)" >> "$LOG/pipeline.log"
   return $rc
@@ -91,10 +91,10 @@ for seed in 42 43 44 45 46; do
     --split-seed 2026 --seed $seed
 done
 
-python scripts/summarize_five_runs.py --glob "$OUT/edge_rgcn_seed*/metrics.json" --output "$OUT/edge_rgcn_summary.json" --model edge_rgcn_deployed --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
-python scripts/summarize_five_runs.py --glob "$OUT/gcn_seed*/metrics.json" --output "$OUT/gcn_summary.json" --model gcn --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
-python scripts/summarize_five_runs.py --glob "$OUT/sbert_mlp_seed*/metrics.json" --output "$OUT/sbert_mlp_summary.json" --model sbert_mlp --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
-python scripts/summarize_five_runs.py --glob "$OUT/rgcn_meanmax_seed*/metrics.json" --output "$OUT/rgcn_meanmax_summary.json" --model rgcn_meanmax --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
-python scripts/summarize_five_runs.py --glob "$OUT/igad_seed*/metrics.json" --output "$OUT/igad_summary.json" --model igad --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
+python3 scripts/summarize_five_runs.py --glob "$OUT/edge_rgcn_seed*/metrics.json" --output "$OUT/edge_rgcn_summary.json" --model edge_rgcn_deployed --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
+python3 scripts/summarize_five_runs.py --glob "$OUT/gcn_seed*/metrics.json" --output "$OUT/gcn_summary.json" --model gcn --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
+python3 scripts/summarize_five_runs.py --glob "$OUT/sbert_mlp_seed*/metrics.json" --output "$OUT/sbert_mlp_summary.json" --model sbert_mlp --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
+python3 scripts/summarize_five_runs.py --glob "$OUT/rgcn_meanmax_seed*/metrics.json" --output "$OUT/rgcn_meanmax_summary.json" --model rgcn_meanmax --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
+python3 scripts/summarize_five_runs.py --glob "$OUT/igad_seed*/metrics.json" --output "$OUT/igad_summary.json" --model igad --dataset atbench_final --abnormal-fraction 0.15 >> "$LOG/summary.log" 2>&1
 
 echo "[atbench-final] ALL DONE $(date)" >> "$LOG/pipeline.log"
