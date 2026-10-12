@@ -1,0 +1,27 @@
+{
+  "trajectories": 1000,
+  "outcomes": {
+    "compromised": 196,
+    "defended": 295,
+    "uncertain": 6,
+    "clean": 503
+  },
+  "binary_security_labels": {
+    "normal_clean_or_defended": 798,
+    "abnormal_compromised": 196
+  },
+  "uncertain": 6,
+  "strict_graph_eligible": 804,
+  "strict_graph_labels": {
+    "normal": 608,
+    "abnormal": 196
+  },
+  "excluded_from_strict_graphs": {
+    "incomplete_clean": 190,
+    "uncertain": 6
+  },
+  "agent_model": "deepseek-flash",
+  "retry_thinking_mode": "disabled",
+  "attack_success_policy": "unsafe_tool_attempt_or_completion",
+  "real_tools_executed": false
+}
